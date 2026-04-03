@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SYS.2 Requirement Quality Checker — INCOSE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* ═══════════════════════════ TOKENS ═══════════════════════════ */
+:root {
+  --bg:       #F5F7FA;
+  --surface:  #FFFFFF;
+  --s2:       #F8FAFC;
+  --bdr:      #E2E8F0;
+  --bdr2:     #CBD5E1;
+  --acc:      #2563EB;
+  --acc-light:#EFF6FF;
+  --acc-dark: #1D4ED8;
+  --grn:      #059669;
+  --grn-light:#ECFDF5;
+  --red:      #DC2626;
+  --red-light:#FEF2F2;
+  --ylw:      #D97706;
+  --ylw-light:#FFFBEB;
+  --txt:      #1E293B;
+  --txt2:     #475569;
+  --txt3:     #94A3B8;
+  --r:        10px;
+  --r2:       6px;
+  --shadow:   0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --shadow2:  0 4px 16px rgba(0,0,0,.1);
+}
+
+/* ═══════════════════════════ RESET ═══════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; -webkit-font-smoothing: antialiased; }
+body { background: var(--bg); color: var(--txt); font-family: 'Outfit', sans-serif; min-height: 100vh; }
+
+/* ═══════════════════════════ HEADER ═══════════════════════════ */
+.app-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--bdr);
+  padding: 0 32px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow);
+}
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-icon {
+  width: 36px; height: 36px;
+  background: var(--acc);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+}
+.app-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--txt);
+  line-height: 1.2;
+}
+.app-sub {
+  font-size: 11px;
+  color: var(--txt3);
+  font-weight: 400;
+}
+.header-badges {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+.hbadge {
+  background: var(--acc-light);
+  border: 1px solid #BFDBFE;
+  color: var(--acc);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.hbadge.green {
+  background: var(--grn-light);
+  border-color: #A7F3D0;
+  color: var(--grn);
+}
+
+/* ═══════════════════════════ LAYOUT ═══════════════════════════ */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  min-height: calc(100vh - 60px);
+}
+.panel {
+  padding: 24px;
+  overflow-y: auto;
+  max-height: calc(100vh - 60px);
+}
+.panel-left {
+  border-right: 1px solid var(--bdr);
+  background: var(--surface);
+}
+.panel-right {
+  background: var(--bg);
+}
+
+/* ═══════════════════════════ SECTION TITLES ═══════════════════════════ */
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--txt);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.section-title .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--acc);
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════ INPUT AREA ═══════════════════════════ */
+.input-mode-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: var(--r2);
+  padding: 3px;
+  margin-bottom: 16px;
+}
+.mode-tab {
+  flex: 1;
+  padding: 7px 12px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--txt3);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s;
+  border: none;
+  background: transparent;
+}
+.mode-tab.active {
+  background: var(--surface);
+  color: var(--acc);
+  box-shadow: var(--shadow);
+}
+
+.input-area {
+  width: 100%;
+  min-height: 200px;
+  padding: 14px;
+  background: var(--s2);
+  border: 1.5px solid var(--bdr);
+  border-radius: var(--r);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  color: var(--txt);
+  line-height: 1.8;
+  resize: vertical;
+  transition: border-color 0.2s;
+  outline: none;
+}
+.input-area:focus {
+  border-color: var(--acc);
+  background: var(--surface);
+}
+.input-hint {
+  font-size: 11px;
+  color: var(--txt3);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+.input-hint code {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bdr);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 10px;
+}
+
+/* ═══════════════════════════ CONTROLS ═══════════════════════════ */
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.btn {
+  padding: 10px 20px;
+  border-radius: var(--r2);
+  border: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.btn-primary {
+  background: var(--acc);
+  color: #fff;
+  flex: 1;
+  justify-content: center;
+}
+.btn-primary:hover { background: var(--acc-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,.3); }
+.btn-primary:active { transform: translateY(0); }
+.btn-secondary {
+  background: var(--s2);
+  border: 1px solid var(--bdr2);
+  color: var(--txt2);
+}
+.btn-secondary:hover { border-color: var(--acc); color: var(--acc); background: var(--acc-light); }
+.btn-danger {
+  background: var(--red-light);
+  border: 1px solid #FECACA;
+  color: var(--red);
+}
+.btn-danger:hover { background: #FEE2E2; }
+.btn-green {
+  background: var(--grn-light);
+  border: 1px solid #A7F3D0;
+  color: var(--grn);
+}
+.btn-green:hover { background: #D1FAE5; }
+
+/* ═══════════════════════════ SETTINGS ═══════════════════════════ */
+.settings-panel {
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: var(--r);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.setting-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: var(--r2);
+  transition: background 0.15s;
+}
+.setting-item:hover { background: var(--bdr); }
+.setting-item input[type=checkbox] {
+  width: 15px; height: 15px;
+  accent-color: var(--acc);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.setting-label { font-size: 12px; color: var(--txt2); font-weight: 500; }
+.context-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+.context-sel {
+  flex: 1;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--bdr2);
+  border-radius: var(--r2);
+  color: var(--txt);
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+}
+.context-sel:focus { border-color: var(--acc); }
+
+/* ═══════════════════════════ SUMMARY BAR ═══════════════════════════ */
+.summary-bar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.summary-card {
+  background: var(--surface);
+  border: 1px solid var(--bdr);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.summary-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.summary-lbl {
+  font-size: 10px;
+  color: var(--txt3);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 600;
+}
+.sn-total  { color: var(--acc); }
+.sn-pass   { color: var(--grn); }
+.sn-fail   { color: var(--red); }
+.sn-warn   { color: var(--ylw); }
+.sn-issues { color: #7C3AED; }
+
+/* ═══════════════════════════ REQUIREMENT CARDS ═══════════════════════════ */
+.req-list { display: flex; flex-direction: column; gap: 14px; }
+
+.req-card {
+  background: var(--surface);
+  border: 1.5px solid var(--bdr);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.2s;
+}
+.req-card:hover { box-shadow: var(--shadow2); }
+.req-card.status-pass { border-left: 4px solid var(--grn); }
+.req-card.status-fail { border-left: 4px solid var(--red); }
+.req-card.status-warn { border-left: 4px solid var(--ylw); }
+
+.req-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.req-id-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--acc-light);
+  color: var(--acc);
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: 1px solid #BFDBFE;
+  margin-top: 1px;
+}
+.req-text-preview {
+  font-size: 13px;
+  color: var(--txt);
+  line-height: 1.5;
+  flex: 1;
+}
+.req-text-preview .highlighted {
+  background: #FEF08A;
+  padding: 0 2px;
+  border-radius: 2px;
+  font-weight: 500;
+}
+.req-status-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.req-expand-btn {
+  font-size: 12px;
+  color: var(--txt3);
+  flex-shrink: 0;
+  margin-top: 3px;
+  transition: transform 0.2s;
+}
+.req-card.expanded .req-expand-btn { transform: rotate(180deg); }
+
+.req-card-body {
+  display: none;
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--bdr);
+  margin-top: 0;
+}
+.req-card.expanded .req-card-body { display: block; }
+
+/* ═══════════════════════════ ORIGINAL REQ BOX ═══════════════════════════ */
+.orig-box {
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: var(--r2);
+  padding: 12px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--txt2);
+  line-height: 1.7;
+  margin: 12px 0 14px;
+}
+.orig-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--txt3);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+  font-family: 'Outfit', sans-serif;
+}
+
+/* ═══════════════════════════ CRITERIA GRID ═══════════════════════════ */
+.criteria-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.criterion-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: var(--r2);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  border: 1.5px solid transparent;
+}
+.cp-pass  { background: var(--grn-light); color: var(--grn); border-color: #A7F3D0; }
+.cp-fail  { background: var(--red-light); color: var(--red); border-color: #FECACA; }
+.cp-warn  { background: var(--ylw-light); color: var(--ylw); border-color: #FDE68A; }
+.cp-icon  { font-size: 14px; }
+.cp-name  { line-height: 1.2; }
+
+/* ═══════════════════════════ ISSUES LIST ═══════════════════════════ */
+.issues-section { margin-bottom: 16px; }
+.issues-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--txt2);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.issue-item {
+  display: flex;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--r2);
+  margin-bottom: 6px;
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+}
+.issue-item.sev-error {
+  background: var(--red-light);
+  border-color: #FECACA;
+}
+.issue-item.sev-warning {
+  background: var(--ylw-light);
+  border-color: #FDE68A;
+}
+.issue-item.sev-info {
+  background: var(--acc-light);
+  border-color: #BFDBFE;
+}
+.issue-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+.sev-error   .issue-dot { background: var(--red); }
+.sev-warning .issue-dot { background: var(--ylw); }
+.sev-info    .issue-dot { background: var(--acc); }
+.issue-content { flex: 1; }
+.issue-criterion {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 2px;
+}
+.sev-error   .issue-criterion { color: var(--red); }
+.sev-warning .issue-criterion { color: var(--ylw); }
+.sev-info    .issue-criterion { color: var(--acc); }
+.issue-msg { font-size: 12px; color: var(--txt); line-height: 1.5; }
+.issue-detail { font-size: 11px; color: var(--txt3); margin-top: 2px; font-style: italic; }
+
+/* ═══════════════════════════ SUGGESTION BOX ═══════════════════════════ */
+.suggestion-box {
+  background: linear-gradient(135deg, var(--grn-light), #F0FDF4);
+  border: 1.5px solid #6EE7B7;
+  border-radius: var(--r);
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.suggestion-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--grn);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  margin-bottom: 10px;
+}
+.suggested-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--txt);
+  line-height: 1.8;
+  padding: 10px 12px;
+  background: var(--surface);
+  border-radius: var(--r2);
+  border: 1px solid #A7F3D0;
+  margin-bottom: 10px;
+  word-break: break-word;
+}
+.suggestion-actions {
+  display: flex;
+  gap: 8px;
+}
+.copy-btn {
+  padding: 6px 14px;
+  background: var(--grn);
+  color: #fff;
+  border: none;
+  border-radius: var(--r2);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Outfit', sans-serif;
+}
+.copy-btn:hover { background: #047857; }
+.copy-btn.copied { background: #065F46; }
+
+/* ═══════════════════════════ SCORE BADGE ═══════════════════════════ */
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--s2);
+  border-radius: var(--r2);
+  margin-bottom: 14px;
+  border: 1px solid var(--bdr);
+}
+.score-bar-wrap {
+  flex: 1;
+  height: 8px;
+  background: var(--bdr);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.score-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+.score-txt {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  width: 42px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.score-grade {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.g-A { background: #D1FAE5; color: #065F46; }
+.g-B { background: #DBEAFE; color: #1D4ED8; }
+.g-C { background: #FEF9C3; color: #854D0E; }
+.g-D { background: #FEE2E2; color: #991B1B; }
+
+/* ═══════════════════════════ FILTER BAR ═══════════════════════════ */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--bdr2);
+  background: var(--surface);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--txt2);
+}
+.filter-btn:hover { border-color: var(--acc); color: var(--acc); }
+.filter-btn.active { background: var(--acc); border-color: var(--acc); color: #fff; }
+.filter-btn.f-pass.active { background: var(--grn); border-color: var(--grn); }
+.filter-btn.f-fail.active { background: var(--red); border-color: var(--red); }
+.filter-btn.f-warn.active { background: var(--ylw); border-color: var(--ylw); color: var(--txt); }
+
+/* ═══════════════════════════ EMPTY STATE ═══════════════════════════ */
+.empty-state {
+  text-align: center;
+  padding: 60px 32px;
+  color: var(--txt3);
+}
+.empty-icon { font-size: 48px; margin-bottom: 16px; }
+.empty-title { font-size: 16px; font-weight: 600; color: var(--txt2); margin-bottom: 8px; }
+.empty-text  { font-size: 13px; line-height: 1.6; }
+
+/* ═══════════════════════════ INCOSE LEGEND ═══════════════════════════ */
+.legend {
+  background: var(--surface);
+  border: 1px solid var(--bdr);
+  border-radius: var(--r);
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.legend-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 10px;
+}
+.legend-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--r2);
+  background: var(--s2);
+}
+.legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--acc);
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+.legend-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--txt);
+}
+.legend-desc {
+  font-size: 10px;
+  color: var(--txt3);
+  line-height: 1.4;
+}
+
+/* ═══════════════════════════ EXPORT BAR ═══════════════════════════ */
+.export-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--bdr);
+}
+
+/* ═══════════════════════════ SCROLLBAR ═══════════════════════════ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--s2); }
+::-webkit-scrollbar-thumb { background: var(--bdr2); border-radius: 3px; }
+
+/* ═══════════════════════════ TOOLTIP ═══════════════════════════ */
+[title] { cursor: help; }
+
+/* ═══════════════════════════ RESPONSIVE ═══════════════════════════ */
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .panel-left { border-right: none; border-bottom: 1px solid var(--bdr); max-height: none; }
+  .summary-bar { grid-template-columns: repeat(3, 1fr); }
+  .criteria-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ═══════════════════════════ EXCEL DROP ZONE ═══════════════════════════ */
+.excel-drop-zone {
+  border: 2px dashed var(--bdr2);
+  border-radius: var(--r);
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--s2);
+  margin-bottom: 12px;
+}
+.excel-drop-zone:hover, .excel-drop-zone.drag-over {
+  border-color: var(--acc);
+  background: var(--acc-light);
+}
+.excel-drop-zone.loaded {
+  border-color: var(--grn);
+  background: var(--grn-light);
+  border-style: solid;
+}
+.excel-drop-icon { font-size: 36px; margin-bottom: 8px; }
+.excel-drop-title { font-size: 14px; font-weight: 600; color: var(--txt); margin-bottom: 4px; }
+.excel-drop-sub   { font-size: 12px; color: var(--txt3); }
+.excel-status {
+  padding: 10px 14px;
+  border-radius: var(--r2);
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 10px;
+}
+.excel-status.ok   { background: var(--grn-light); color: var(--grn); border: 1px solid #A7F3D0; }
+.excel-status.err  { background: var(--red-light);  color: var(--red);  border: 1px solid #FECACA; }
+.excel-preview-table {
+  width: 100%; border-collapse: collapse; font-size: 11px;
+  margin-top: 8px; max-height: 120px; overflow-y: auto; display: block;
+}
+.excel-preview-table th {
+  background: var(--s2); border: 1px solid var(--bdr);
+  padding: 4px 8px; color: var(--txt3); font-weight: 600; text-align: left;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+}
+.excel-preview-table td {
+  border: 1px solid var(--bdr); padding: 4px 8px;
+  color: var(--txt2); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* suggestion box multi-line */
+.suggested-text { white-space: pre-wrap; }
+
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════ HEADER ════════════════════════ -->
+<header class="app-header">
+  <div class="app-logo">
+    <div class="logo-icon">RQ</div>
+    <div>
+      <div class="app-name">Requirement Quality Checker</div>
+      <div class="app-sub">INCOSE Systems Engineering Handbook · SYS.2 / ISO 29148</div>
+    </div>
+  </div>
+  <div class="header-badges">
+    <span class="hbadge">INCOSE</span>
+    <span class="hbadge">ISO 29148</span>
+    <span class="hbadge green" id="offlineBadge">● OFFLINE</span>
+  </div>
+</header>
+
+<!-- ════════════════════════ LAYOUT ════════════════════════ -->
+<div class="layout">
+
+  <!-- ════════════ LEFT: INPUT ════════════ -->
+  <div class="panel panel-left">
+
+    <!-- INCOSE Legend (collapsible) -->
+    <div class="legend" id="legendBox">
+      <div class="section-head" style="cursor:pointer" onclick="toggleLegend()">
+        <div class="section-title"><div class="dot"></div>INCOSE Quality Criteria (10 Rules)</div>
+        <span id="legendToggle" style="font-size:12px;color:var(--txt3)">▼</span>
+      </div>
+      <div id="legendContent">
+        <div class="legend-grid">
+          <div class="legend-item"><div class="legend-dot"></div><div><div class="legend-name">1. Necessary</div><div class="legend-desc">Essential requirement — no gold plating</div></div></div>
+          <div class="legend-item"><div class="legend-dot"></div><div><div class="legend-name">2. Appropriate</div><div class="legend-desc">Consistent with system architecture</div></div></div>
+          <div class="legend-item"><div class="legend-dot"></div><div><div class="legend-name">3. Unambiguous</div><div class="legend-desc">Single interpretation — no vague words</div></div></div>
+          <div class="legend-item"><div class="legend-dot"></div><div><div class="legend-name">4. Complete</div><div class="legend-desc">All conditions and ranges specified</div></div></div>
+          <div class="legend-item"><div class="legend-dot"></div><div><div class="legend-name">5. Singular</div><div class="legend-desc">States ONE requirement only</div></div></div>
+          <div class="legend-item"><div class="legend-dot"></div><div><div class="legend-name">6. Feasible</div><div class="legend-desc">Technically achievable</div></div></div>
+          <div class="legend-item"><div class="legend-dot"></div><div><div class="legend-name">7. Verifiable</div><div class="legend-desc">Can be tested / inspected / analyzed</div></div></div>
+          <div class="legend-item"><div class="legend-dot"></div><div><div class="legend-name">8. Correct</div><div class="legend-desc">Accurately reflects stakeholder need</div></div></div>
+          <div class="legend-item"><div class="legend-dot"></div><div><div class="legend-name">9. Conforming</div><div class="legend-desc">Uses "shall" / "must" structure</div></div></div>
+          <div class="legend-item"><div class="legend-dot"></div><div><div class="legend-name">10. Traceable</div><div class="legend-desc">Has unique ID, traceable to source</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="settings-panel">
+      <div class="section-title" style="margin-bottom:12px"><div class="dot" style="background:var(--txt3)"></div>Analysis Settings</div>
+      <div class="settings-grid">
+        <label class="setting-item"><input type="checkbox" id="chk-ambiguous" checked><span class="setting-label">🔍 Ambiguous Words</span></label>
+        <label class="setting-item"><input type="checkbox" id="chk-singular" checked><span class="setting-label">✂️ Singular Check</span></label>
+        <label class="setting-item"><input type="checkbox" id="chk-verifiable" checked><span class="setting-label">✅ Verifiability</span></label>
+        <label class="setting-item"><input type="checkbox" id="chk-conforming" checked><span class="setting-label">📋 Shall/Must</span></label>
+        <label class="setting-item"><input type="checkbox" id="chk-complete" checked><span class="setting-label">📊 Completeness</span></label>
+        <label class="setting-item"><input type="checkbox" id="chk-traceable" checked><span class="setting-label">🔗 Traceability</span></label>
+        <label class="setting-item"><input type="checkbox" id="chk-negative" checked><span class="setting-label">⚠️ Negative Reqs</span></label>
+        <label class="setting-item"><input type="checkbox" id="chk-passive" checked><span class="setting-label">🔄 Passive Voice</span></label>
+      </div>
+      <div class="context-row">
+        <select class="context-sel" id="domainSel">
+          <option value="automotive">Automotive / Embedded Systems</option>
+          <option value="aerospace">Aerospace / Defense</option>
+          <option value="medical">Medical Device</option>
+          <option value="software">Software System</option>
+          <option value="general">General Engineering</option>
+        </select>
+        <select class="context-sel" id="strictSel">
+          <option value="standard">Standard Strictness</option>
+          <option value="strict">Strict (Safety-Critical)</option>
+          <option value="relaxed">Relaxed (Early Phase)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Input mode tabs -->
+    <div class="input-mode-tabs">
+      <button class="mode-tab active" onclick="setMode('text')" id="tab-text">📝 Paste Text</button>
+      <button class="mode-tab" onclick="setMode('single')" id="tab-single">➕ Single</button>
+      <button class="mode-tab" onclick="setMode('excel')" id="tab-excel">📊 Excel / CSV</button>
+    </div>
+
+    <!-- Text area -->
+    <div id="mode-text">
+      <textarea class="input-area" id="reqInput" placeholder="Paste your requirements here — one per line.
+
+Examples:
+CS-SYS2-001: The system shall detect CAN bus errors within 10 ms.
+CS-SYS2-002: The ECU should handle errors appropriately and ensure safety.
+CS-SYS2-003: The system shall support fast response and also log all events.
+
+Format options:
+• ID: Text  (e.g.  REQ-001: The system shall...)
+• Plain text  (IDs auto-generated)
+• Numbered list  (1. The system shall...)" rows="12"></textarea>
+      <div class="input-hint">
+        Supports: <code>REQ-001: text</code> · <code>1. text</code> · plain text (auto ID) · up to 500 requirements
+      </div>
+    </div>
+
+    <div id="mode-single" style="display:none">
+      <input type="text" class="input-area" id="singleId"
+             placeholder="Requirement ID (e.g. CS-SYS2-042)"
+             style="min-height:auto;height:40px;margin-bottom:8px;font-size:13px">
+      <textarea class="input-area" id="singleText"
+                placeholder="Type or paste one requirement here..." rows="4"></textarea>
+      <div class="input-hint">Type a single requirement to analyse it in detail with full suggestions.</div>
+    </div>
+
+    <!-- Excel / CSV upload mode -->
+    <div id="mode-excel" style="display:none">
+      <div class="excel-drop-zone" id="excelDropZone"
+           ondragover="excelDragOver(event)" ondragleave="excelDragLeave(event)" ondrop="excelDrop(event)"
+           onclick="document.getElementById('excelFileInput').click()">
+        <div class="excel-drop-icon">📊</div>
+        <div class="excel-drop-title">Drop Excel (.xlsx) or CSV file here</div>
+        <div class="excel-drop-sub">or click to browse · max 10 MB</div>
+        <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="excelFileSelected(event)">
+      </div>
+      <div id="excelStatus" style="display:none" class="excel-status"></div>
+      <div id="excelColMap" style="display:none">
+        <div class="input-hint" style="margin-bottom:8px">
+          <strong>Map columns:</strong> Select which columns contain the Requirement ID and Requirement Text.
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div style="flex:1;min-width:120px">
+            <label style="display:block;font-size:11px;color:var(--txt3);margin-bottom:4px;font-family:'JetBrains Mono',monospace;text-transform:uppercase">ID Column</label>
+            <select class="context-sel" id="colId" style="width:100%"></select>
+          </div>
+          <div style="flex:2;min-width:160px">
+            <label style="display:block;font-size:11px;color:var(--txt3);margin-bottom:4px;font-family:'JetBrains Mono',monospace;text-transform:uppercase">Requirement Text Column</label>
+            <select class="context-sel" id="colText" style="width:100%"></select>
+          </div>
+          <div style="align-self:flex-end">
+            <button class="btn btn-secondary" onclick="loadExcelIntoTextarea()" style="height:36px">Load →</button>
+          </div>
+        </div>
+        <div id="excelPreview" style="margin-top:10px"></div>
+      </div>
+      <div class="input-hint" style="margin-top:8px">
+        Supported: .xlsx, .xls (Excel), .csv — The tool reads your requirement ID and text columns,
+        then analyses all rows. Results download back to Excel with an added Quality Report sheet.
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-primary" onclick="analyseAll()">
+        ⚡ Analyse Requirements
+      </button>
+      <button class="btn btn-secondary" onclick="loadSamples()">📋 Load Samples</button>
+      <button class="btn btn-danger" onclick="clearAll()">✕</button>
+    </div>
+
+    <!-- Export -->
+    <div class="export-bar" id="exportBar" style="display:none">
+      <button class="btn btn-green" onclick="exportCSV()">↓ Export CSV</button>
+      <button class="btn btn-green" onclick="exportExcelWithResults()" id="btnExcelExport" style="display:none">📊 Export with Results</button>
+      <button class="btn btn-secondary" onclick="exportHTML()">↓ Export Report</button>
+      <button class="btn btn-secondary" onclick="copyGoodReqs()">📋 Copy Improved</button>
+    </div>
+
+  </div>
+
+  <!-- ════════════ RIGHT: RESULTS ════════════ -->
+  <div class="panel panel-right" id="resultsPanel">
+
+    <!-- Empty state -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-title">No requirements analysed yet</div>
+      <div class="empty-text">
+        Paste your SYS.2 requirements on the left and click<br>
+        <strong>Analyse Requirements</strong> to check quality against all<br>
+        10 INCOSE criteria and get improvement suggestions.
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="resultsArea" style="display:none">
+
+      <!-- Summary bar -->
+      <div class="summary-bar">
+        <div class="summary-card">
+          <div class="summary-num sn-total" id="sumTotal">0</div>
+          <div class="summary-lbl">Total</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-num sn-pass" id="sumPass">0</div>
+          <div class="summary-lbl">Pass</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-num sn-warn" id="sumWarn">0</div>
+          <div class="summary-lbl">Warnings</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-num sn-fail" id="sumFail">0</div>
+          <div class="summary-lbl">Fail</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-num sn-issues" id="sumIssues">0</div>
+          <div class="summary-lbl">Issues</div>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterCards('all', this)">All</button>
+        <button class="filter-btn f-pass" onclick="filterCards('pass', this)">✅ Pass</button>
+        <button class="filter-btn f-warn" onclick="filterCards('warn', this)">⚠️ Warnings</button>
+        <button class="filter-btn f-fail" onclick="filterCards('fail', this)">❌ Fail</button>
+      </div>
+
+      <!-- Requirement cards -->
+      <div class="req-list" id="reqList"></div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ JAVASCRIPT ENGINE ════════════════════ -->
+<script>
+
+// ═══════════════════════════════════════════════════════════════════
+// INCOSE ANALYSIS ENGINE
+// ═══════════════════════════════════════════════════════════════════
+
+const WEAK_WORDS = [
+  'adequate','if possible','as applicable','and/or','support','consider','several',
+  'etc','approximately','as required','good','maximum possible','minimum possible',
+  'best effort','easy','fast','reasonable','user friendly','user-friendly','flexible',
+  'robust','efficient','simple','capable','appropriate','usually','generally',
+  'should','may','might','could','would','some','many','normal','handle','manage',
+  'ensure','shall not be limited to','timely','sufficient','relevant','necessary',
+  'properly','correctly','quickly','slowly','often','seldom','minimize','maximize',
+  'optimize','easy to','intuitive','seamless','adequate performance',
+  'state of the art','latest technology','as needed','when required','if necessary',
+  'etc.','and so on','or similar','or equivalent','at least','at most','up to',
+  'about','around','approximately','roughly','nearly','essentially','basically',
+  'various','numerous','large','small','high','low','good performance',
+  'acceptable','satisfactory','be able to','be capable of','plan to','intend to'
+];
+
+const UNVERIFIABLE_WORDS = [
+  'user friendly','user-friendly','easy to use','easy to understand','intuitive',
+  'look and feel','aesthetically','attractive','pleasant','comfortable','natural',
+  'transparent to the user','seamless','smooth','elegant','modern','clean',
+  'should be obvious','self-explanatory','simple interface'
+];
+
+const NEGATIVE_PATTERNS = [
+  /shall not be limited/i,
+  /must not be restricted/i,
+  /shall avoid/i,
+  /must avoid/i,
+  /\bnot\b.*\bshall\b/i,
+];
+
+const MULTI_REQ_PATTERNS = [
+  / and (shall|must) /i,
+  / also (shall|must) /i,
+  /\. The system shall.*\. The system shall/i,
+  /; the system (shall|must)/i,
+];
+
+const INCOMPLETE_PATTERNS = [
+  /under all conditions/i,
+  /in all cases/i,
+  /always be/i,
+  /at all times/i,
+  /shall handle/i,
+  /shall manage/i,
+  /shall support/i,
+  /shall process/i,
+  /shall ensure/i,
+];
+
+const TBD_PATTERNS = [
+  /\bTBD\b/i, /\bTBC\b/i, /\bTBR\b/i, /\[TBD\]/i, /\(TBD\)/i,
+  /to be defined/i, /to be confirmed/i, /to be determined/i,
+];
+
+// ── Parse requirements from input ───────────────────────────────────────────
+
+function parseRequirements(text) {
+  if (!text.trim()) return [];
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 5);
+  const reqs = [];
+  let autoIdx = 1;
+
+  for (const line of lines) {
+    if (!line) continue;
+
+    // Try formats: "ID: text" or "ID - text" or "1. text" or "1) text"
+    let id = '', body = line;
+
+    // Format: WORD-NUM: text  or  WORD_NUM: text
+    const m1 = line.match(/^([A-Z][A-Z0-9_\-]{1,20})\s*[:]\s*(.+)$/i);
+    if (m1) { id = m1[1].toUpperCase(); body = m1[2].trim(); }
+    else {
+      // Format: 123. text or 123) text
+      const m2 = line.match(/^(\d+)[.)]\s*(.+)$/);
+      if (m2) { id = `REQ-${m2[1].padStart(3,'0')}`; body = m2[2].trim(); }
+      else {
+        id = `REQ-${String(autoIdx).padStart(3,'0')}`;
+        autoIdx++;
+      }
+    }
+
+    if (body.length > 5) {
+      reqs.push({ id, body, raw: line });
+    }
+  }
+  return reqs;
+}
+
+// ── Core analysis function per requirement ───────────────────────────────────
+
+function analyseRequirement(id, body, settings) {
+  const issues  = [];
+  const strict  = settings.strict === 'strict';
+  const relaxed = settings.strict === 'relaxed';
+  const lower   = body.toLowerCase();
+
+  // ── 1. CONFORMING: Must use "shall" or "must" ──────────────────────────────
+  if (settings['chk-conforming']) {
+    const hasShall = /\bshall\b/i.test(body);
+    const hasMust  = /\bmust\b/i.test(body);
+    const hasWeak  = /\bshould\b/i.test(body) || /\bwill\b/i.test(body) || /\bwould\b/i.test(body);
+
+    if (!hasShall && !hasMust) {
+      issues.push({
+        criterion: 'Conforming',
+        severity:  'error',
+        msg:       'Requirement does not use "shall" or "must"',
+        detail:    'INCOSE/ISO 29148 requires "shall" for mandatory requirements. "Should" = recommended, "May" = optional.'
+      });
+    } else if (hasWeak && !hasShall && !hasMust) {
+      issues.push({
+        criterion: 'Conforming',
+        severity:  'warning',
+        msg:       'Uses "should" or "will" instead of "shall"',
+        detail:    '"Should" implies a recommendation, not a mandatory requirement. Replace with "shall".'
+      });
+    }
+    if (hasWeak && (hasShall || hasMust)) {
+      issues.push({
+        criterion: 'Conforming',
+        severity:  'warning',
+        msg:       'Mixes "shall/must" with "should/will"',
+        detail:    'Keep consistent: use only "shall" for all mandatory statements in one requirement.'
+      });
+    }
+  }
+
+  // ── 2. SINGULAR: Only one requirement per statement ────────────────────────
+  if (settings['chk-singular']) {
+    const shallCount = (body.match(/\bshall\b/gi) || []).length;
+    const mustCount  = (body.match(/\bmust\b/gi) || []).length;
+    const total      = shallCount + mustCount;
+
+    if (total > 1) {
+      issues.push({
+        criterion: 'Singular',
+        severity:  'error',
+        msg:       `Contains ${total} "shall/must" statements — should be split into ${total} separate requirements`,
+        detail:    `Found ${total} obligation words. Each requirement must state exactly one condition to be satisfied.`
+      });
+    }
+
+    // Check for hidden compound via "and also"
+    if (/\band also\b/i.test(body) || /\bas well as\b/i.test(body)) {
+      issues.push({
+        criterion: 'Singular',
+        severity:  'warning',
+        msg:       '"And also" / "as well as" suggests compound requirement',
+        detail:    'Consider splitting into two separate requirements.'
+      });
+    }
+  }
+
+  // ── 3. UNAMBIGUOUS: No weak/vague words ───────────────────────────────────
+  if (settings['chk-ambiguous']) {
+    const found = WEAK_WORDS.filter(w => {
+      const re = new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i');
+      return re.test(body);
+    });
+    if (found.length > 0) {
+      issues.push({
+        criterion: 'Unambiguous',
+        severity:  found.length > 2 ? 'error' : 'warning',
+        msg:       `Contains ${found.length} ambiguous/weak word(s): ${found.slice(0,4).map(w=>`"${w}"`).join(', ')}${found.length>4?'...':''}`,
+        detail:    'Replace vague words with specific, measurable criteria. E.g. "fast" → "within 100 ms", "appropriate" → "as specified in [STD-X]".'
+      });
+    }
+  }
+
+  // ── 4. VERIFIABLE: Must be testable ──────────────────────────────────────
+  if (settings['chk-verifiable']) {
+    const unverif = UNVERIFIABLE_WORDS.filter(w => lower.includes(w));
+    if (unverif.length > 0) {
+      issues.push({
+        criterion: 'Verifiable',
+        severity:  'error',
+        msg:       `Contains unverifiable subjective term(s): ${unverif.map(w=>`"${w}"`).join(', ')}`,
+        detail:    'Subjective terms cannot be objectively tested. Replace with measurable criteria.'
+      });
+    }
+
+    // Check for measurable values (numbers, units, tolerance)
+    const hasNumber  = /\d+\s*(ms|s|hz|mhz|v|a|w|kb|mb|gb|%|mm|cm|m|km|°|bar|n|nm|rpm|kw|mw)/i.test(body);
+    const hasRef     = /\[.*?\]|\(see |\(per |per \[|according to/i.test(body);
+    const hasWhen    = /\bwhen\b|\bif\b|\bwithin\b|\bafter\b|\bbefore\b|\bduring\b/i.test(body);
+    const hasQuant   = /\b\d+\b/.test(body);
+
+    if (!hasNumber && !hasRef && !hasQuant && /\bshall\b|\bmust\b/i.test(body)) {
+      const severity = strict ? 'warning' : (relaxed ? 'info' : 'info');
+      issues.push({
+        criterion: 'Verifiable',
+        severity:  severity,
+        msg:       'No measurable value, unit, or reference found',
+        detail:    'Consider adding specific thresholds, tolerances, or a reference standard to make this testable.'
+      });
+    }
+  }
+
+  // ── 5. COMPLETE: No TBDs, no missing conditions ───────────────────────────
+  if (settings['chk-complete']) {
+    const tbd = TBD_PATTERNS.filter(p => p.test(body));
+    if (tbd.length > 0) {
+      issues.push({
+        criterion: 'Complete',
+        severity:  'error',
+        msg:       'Contains TBD/TBC/TBR placeholder — requirement is incomplete',
+        detail:    'All placeholders must be resolved before the requirement is baselined. Remove TBDs and define the actual value.'
+      });
+    }
+
+    // No subject
+    if (!/the system|the ecu|the component|the device|the software|the module|the unit|the controller|the interface|the function/i.test(body) &&
+        !/\bshall\b|\bmust\b/i.test(body.split(/shall|must/i)[0] + ' check')) {
+      // Very short subject check — skip if it starts with "The"
+    }
+
+    // Open-ended
+    if (/etc\b|and so on|or similar|or equivalent/i.test(body)) {
+      issues.push({
+        criterion: 'Complete',
+        severity:  'warning',
+        msg:       '"Etc." / "or similar" makes requirement open-ended',
+        detail:    'List all items explicitly. Open-ended enumeration prevents complete verification.'
+      });
+    }
+  }
+
+  // ── 6. TRACEABLE: Has ID ──────────────────────────────────────────────────
+  if (settings['chk-traceable']) {
+    if (/^REQ-\d+$/.test(id)) {
+      issues.push({
+        criterion: 'Traceable',
+        severity:  'info',
+        msg:       'Auto-generated ID — recommend using a project-specific ID',
+        detail:    'Use a meaningful ID like "CS-SYS2-042" to enable tracing to parent requirements and test cases.'
+      });
+    }
+  }
+
+  // ── 7. NEGATIVE REQUIREMENTS ──────────────────────────────────────────────
+  if (settings['chk-negative']) {
+    const negMatch = NEGATIVE_PATTERNS.find(p => p.test(body));
+    if (negMatch) {
+      issues.push({
+        criterion: 'Correct',
+        severity:  'warning',
+        msg:       'Negative requirement detected — difficult to verify exhaustively',
+        detail:    'Rewrite as a positive requirement where possible. E.g. "shall not fail" → "shall achieve 99.9% availability".'
+      });
+    }
+  }
+
+  // ── 8. PASSIVE VOICE ─────────────────────────────────────────────────────
+  if (settings['chk-passive']) {
+    // Detect strong passive: "be [verb]ed" without clear subject
+    const passiveMatch = body.match(/\b(shall|must)\s+be\s+\w+ed\b/i);
+    if (passiveMatch) {
+      const beforeShall = body.substring(0, body.search(/\bshall\b|\bmust\b/i)).trim().toLowerCase();
+      if (!beforeShall || beforeShall.length < 3) {
+        issues.push({
+          criterion: 'Unambiguous',
+          severity:  'info',
+          msg:       'Passive voice without clear subject ("shall be [verb]ed")',
+          detail:    'Specify WHO or WHAT performs the action. E.g. "shall be detected" → "The ECU shall detect..."'
+        });
+      }
+    }
+  }
+
+  // ── 9. INCOMPLETE PATTERNS (handle/manage/ensure without specifics) ───────
+  if (settings['chk-complete']) {
+    const incompleteMatch = INCOMPLETE_PATTERNS.find(p => p.test(body));
+    if (incompleteMatch) {
+      // Only flag if no further specifics follow
+      if (body.split(/\bshall\b/i)[1] && body.split(/\bshall\b/i)[1].trim().split(/\s+/).length < 8) {
+        issues.push({
+          criterion: 'Complete',
+          severity:  'info',
+          msg:       'Vague action verb ("handle", "manage", "ensure", "support") without specific criteria',
+          detail:    'Specify exactly what the system must do. E.g. "shall handle errors" → "shall set DTC 0x1234 within 10 ms when error condition X occurs".'
+        });
+      }
+    }
+  }
+
+  // ── Determine overall status ──────────────────────────────────────────────
+  const errors   = issues.filter(i => i.severity === 'error').length;
+  const warnings = issues.filter(i => i.severity === 'warning').length;
+  const infos    = issues.filter(i => i.severity === 'info').length;
+
+  let status = 'pass';
+  if (errors > 0) status = 'fail';
+  else if (warnings > 0) status = 'warn';
+
+  // ── Score: 10 criteria, deduct per issue ──────────────────────────────────
+  const maxScore = 100;
+  const deduct   = errors * 15 + warnings * 7 + infos * 2;
+  const score    = Math.max(0, maxScore - deduct);
+
+  return { id, body, issues, status, score, errors, warnings, infos };
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SUGGESTION ENGINE v2 — fixes every detected issue individually
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Weak word → precise replacement
+const WEAK_FIXES = {
+  // Vague adjectives / adverbs
+  'adequate':           '[specify minimum threshold, e.g. ≥ X unit]',
+  'adequately':         '[specify exact criterion]',
+  'appropriately':      '[specify the exact action]',
+  'appropriate':        '[specify the exact criterion]',
+  'timely':             '[specify time limit, e.g. within 100 ms]',
+  'fast':               '[specify time, e.g. within 50 ms]',
+  'quickly':            '[specify time, e.g. within 100 ms]',
+  'slowly':             '[specify time, e.g. no more than X s]',
+  'sufficient':         '[specify minimum quantity/threshold]',
+  'sufficiently':       '[specify measurable level]',
+  'reasonable':         '[specify measurable criterion]',
+  'reasonably':         '[specify measurable criterion]',
+  'good':               '[specify measurable quality criterion]',
+  'robust':             '[specify resilience criterion, e.g. withstand 3 consecutive faults]',
+  'efficient':          '[specify efficiency metric, e.g. CPU utilisation < 70%]',
+  'efficiently':        '[specify efficiency metric, e.g. within X ms, CPU < Y%]',
+  'flexible':           '[specify adaptability criterion]',
+  'simple':             '[specify measurable complexity criterion]',
+  'easy':               '[specify measurable criterion]',
+  'easy to use':        '[specify usability criterion per ISO 9241]',
+  'user friendly':      '[specify usability criterion per ISO 9241]',
+  'user-friendly':      '[specify usability criterion per ISO 9241]',
+  'intuitive':          '[specify measurable usability criterion]',
+  'seamless':           '[specify measurable transition criterion]',
+  'best effort':        '[specify the minimum guaranteed level of performance]',
+  'as required':        '[reference the specific document or standard that states the requirement]',
+  'as applicable':      '[specify the exact conditions of applicability]',
+  'if possible':        '[if mandatory, remove qualifier; if conditional, specify the condition explicitly]',
+  'several':            '[specify exact number]',
+  'many':               '[specify exact number or minimum]',
+  'some':               '[specify exact number or minimum]',
+  'various':            '[list all specific items]',
+  'numerous':           '[specify exact number]',
+  'etc.':               '[list all items explicitly — open enumeration is not acceptable]',
+  'etc':                '[list all items explicitly — open enumeration is not acceptable]',
+  'and so on':          '[list all items explicitly]',
+  'or similar':         '[specify the exact acceptable equivalent]',
+  'or equivalent':      '[specify the exact acceptable equivalent or define equivalence criteria]',
+  'usually':            '[specify exact condition or frequency, e.g. in all cases / in ≥ 99% of cases]',
+  'generally':          '[specify exact condition — remove ambiguity]',
+  'normal':             '[define "normal" explicitly with measurable criteria]',
+  'normally':           '[specify exact condition — remove ambiguity]',
+  'approximately':      '[specify exact value with tolerance, e.g. 100 ms ± 5 ms]',
+  'about':              '[specify exact value with tolerance]',
+  'around':             '[specify exact value with tolerance]',
+  'at least':           '[specify exact minimum value]',
+  'maximum possible':   '[specify exact maximum value]',
+  'minimum possible':   '[specify exact minimum value]',
+  'state of the art':   '[reference a specific standard or version, e.g. ISO XXXX:2024]',
+  'handle':             '[specify the exact response action, e.g. set DTC, degrade to safe state, log event]',
+  'manage':             '[specify the exact management action and criteria]',
+  'support':            '[specify the exact capability — "support" is not verifiable]',
+  'process':            '[specify what processing is done, to what output, within what time]',
+  'optimal':            '[specify the optimisation criterion and measurable target]',
+  'optimized':          '[specify the optimisation criterion and measurable target]',
+  'minimize':           '[specify the exact minimum target value]',
+  'maximize':           '[specify the exact maximum target value]',
+  'high':               '[specify exact value, e.g. > X unit]',
+  'low':                '[specify exact value, e.g. < X unit]',
+  'large':              '[specify exact dimension/quantity]',
+  'small':              '[specify exact dimension/quantity]',
+};
+
+function generateSuggestion(result) {
+  let text   = result.body;
+  const issues = result.issues;
+  const criteriaFailing = new Set(issues.map(i => i.criterion));
+  const notes = [];   // explanatory notes appended after the requirement
+
+  // ── STEP 1: Fix "should / will / would / may / might / could" → "shall" ──
+  // but only mandatory ones (not "shall not" negation)
+  const hasShall = /\bshall\b/i.test(text);
+  const hasMust  = /\bmust\b/i.test(text);
+
+  if (!hasShall && !hasMust) {
+    // Replace weak obligation words
+    text = text.replace(/\bshould\b/gi,  'shall');
+    text = text.replace(/\bwould\b/gi,   'shall');
+    // "will" → "shall" only in obligation context (avoid "will not" edge case)
+    text = text.replace(/\bwill\s+(?!not\b)/gi, 'shall ');
+  } else if (/\bshould\b/i.test(text)) {
+    // Mixed: replace the "should" instances too
+    text = text.replace(/\bshould\b/gi, 'shall');
+    notes.push('⚠ "should" replaced with "shall" — verify intent is mandatory.');
+  }
+
+  // ── STEP 2: Fix passive declarative ("is designed/intended/expected for") ──
+  // e.g. "The system is designed for X" → "The system shall [operate/be designed] for X"
+  // Pattern: <subject> is/are [past-participle] for/to/at/with
+  text = text.replace(
+    /\b(is|are)\s+(designed|intended|expected|required|assumed|used|operated|installed|configured|meant)\b/gi,
+    (match, be, verb) => {
+      const verbMap = {
+        designed:    'shall be designed',
+        intended:    'shall be intended',
+        expected:    'shall',
+        required:    'shall',
+        assumed:     'shall',
+        used:        'shall be used',
+        operated:    'shall operate',
+        installed:   'shall be installed',
+        configured:  'shall be configured',
+        meant:       'shall',
+      };
+      return verbMap[verb.toLowerCase()] || `shall be ${verb}`;
+    }
+  );
+
+  // ── STEP 3: Fix other passive "shall be [verbed]" without subject ─────────
+  // e.g. "Errors shall be detected" → add subject hint if no subject before "shall"
+  const beforeShall = text.split(/\bshall\b/i)[0].trim();
+  if (beforeShall.length < 3 || /^shall\b/i.test(text.trim())) {
+    text = '[The System] ' + text.trim();
+    notes.push('⚠ No subject identified — replace [The System] with the specific component name.');
+  }
+
+  // ── STEP 4: Fix negative requirements → rewrite as positive ───────────────
+  // "shall not be limited" → positive capability statement
+  text = text.replace(/\bshall\s+not\s+be\s+limited\s+(to|in|by)\b/gi,
+    'shall support all [list specific capabilities explicitly]');
+  text = text.replace(/\bshall\s+not\s+be\s+restricted\b/gi,
+    'shall support [specify required capability without restriction]');
+
+  // Generic "shall not [verb]" → suggest positive rewrite but keep
+  if (/\bshall\s+not\b/i.test(text)) {
+    notes.push('⚠ Negative requirement detected. Consider rewriting as a positive capability, e.g. "shall not fail" → "shall achieve [X]% availability".');
+  }
+
+  // ── STEP 5: Replace every detected weak word with specific placeholder ────
+  for (const [weak, replacement] of Object.entries(WEAK_FIXES)) {
+    const escaped = weak.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Word-boundary aware, case-insensitive
+    const re = new RegExp('(?<![\\w-])' + escaped + '(?![\\w-])', 'gi');
+    text = text.replace(re, replacement);
+  }
+
+  // ── STEP 6: Fix "ensure" with no measurable follow-on ─────────────────────
+  // "shall ensure X" → "shall [specific action] to achieve [measurable X]"
+  text = text.replace(/\bshall\s+ensure\s+(?!that\b)/gi,
+    'shall [specify exact action] to ensure ');
+  text = text.replace(/\bshall\s+ensure\s+that\b/gi,
+    'shall [specify exact action] such that');
+
+  // ── STEP 7: Handle compound (multiple "shall") → split note ───────────────
+  const shallCount = (text.match(/\bshall\b/gi) || []).length;
+  if (shallCount > 1) {
+    notes.push(`⚠ SPLIT REQUIRED: This requirement contains ${shallCount} "shall" statements. Split into ${shallCount} separate requirements — one per "shall".`);
+    // Show numbered split hint
+    const parts = text.split(/(?<=\bshall\b[^.]{3,80}[;,])\s*(?=\w)/i);
+    if (parts.length > 1) {
+      notes.push(`   Suggested split:\n${parts.map((p,i) => `   [${result.id}-${String.fromCharCode(65+i)}]: ${p.trim()}`).join('\n')}`);
+    }
+  }
+
+  // ── STEP 8: No measurable value present → add placeholder ─────────────────
+  const hasNumber = /\d+\s*(ms|s\b|hz|mhz|v\b|a\b|w\b|kb|mb|gb|%|mm|cm\b|m\b|km|°|bar|n\b|nm|rpm|kw|mw)/i.test(text);
+  const hasRef    = /\[.*?\]|\(see |\(per |per \[|according to|ISO |IEC |SAE /i.test(text);
+  const hasRange  = /between\s+[\d.]+\s+(to|and)\s+[\d.]+/i.test(result.body); // already has a range
+  if (/\bshall\b/i.test(text) && !hasNumber && !hasRef && !hasRange &&
+      !text.includes('[specify') && !text.includes('[list')) {
+    // append measurable placeholder at end (before period)
+    text = text.replace(/\.\s*$/, '') + ' [specify measurable acceptance criterion, e.g. within X ms / ≥ Y%].';
+    notes.push('⚠ No measurable value found — add a specific threshold or reference standard to make this verifiable.');
+  }
+
+  // ── STEP 9: "TBD / TBC / TBR" → replace inline ───────────────────────────
+  text = text.replace(/\[?TBD\]?/gi, '[TO BE DEFINED — must be resolved before baseline]');
+  text = text.replace(/\[?TBC\]?/gi, '[TO BE CONFIRMED — must be resolved before baseline]');
+  text = text.replace(/\[?TBR\]?/gi, '[TO BE REVIEWED  — must be resolved before baseline]');
+
+  // ── STEP 10: "etc." / open-ended lists ────────────────────────────────────
+  text = text.replace(/,?\s*etc\.?/gi, ', [list all remaining items explicitly]');
+
+  // ── FINAL CLEANUP ─────────────────────────────────────────────────────────
+  // Remove double spaces
+  text = text.replace(/\s{2,}/g, ' ').trim();
+  // Add period if missing
+  if (!/[.!?]$/.test(text) && !text.endsWith(']')) text += '.';
+  // Capitalise first letter
+  text = text.charAt(0).toUpperCase() + text.slice(1);
+
+  // Build final output: improved requirement + notes
+  let output = text;
+  if (notes.length > 0) {
+    output += '\n\n' + notes.join('\n');
+  }
+  return output;
+}
+
+// ── Criteria result grid data ─────────────────────────────────────────────
+
+function getCriteriaStatus(result) {
+  const failing = new Set(result.issues.filter(i => i.severity === 'error').map(i => i.criterion));
+  const warning = new Set(result.issues.filter(i => i.severity === 'warning').map(i => i.criterion));
+
+  const all = [
+    'Conforming','Singular','Unambiguous','Verifiable','Complete',
+    'Traceable','Necessary','Feasible','Correct','Appropriate'
+  ];
+  return all.map(name => {
+    let status = 'pass';
+    if (failing.has(name)) status = 'fail';
+    else if (warning.has(name)) status = 'warn';
+    return { name, status };
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// UI RENDERING
+// ═══════════════════════════════════════════════════════════════════
+
+let allResults = [];
+let currentFilter = 'all';
+
+function getSettings() {
+  return {
+    'chk-ambiguous':  document.getElementById('chk-ambiguous').checked,
+    'chk-singular':   document.getElementById('chk-singular').checked,
+    'chk-verifiable': document.getElementById('chk-verifiable').checked,
+    'chk-conforming': document.getElementById('chk-conforming').checked,
+    'chk-complete':   document.getElementById('chk-complete').checked,
+    'chk-traceable':  document.getElementById('chk-traceable').checked,
+    'chk-negative':   document.getElementById('chk-negative').checked,
+    'chk-passive':    document.getElementById('chk-passive').checked,
+    strict:           document.getElementById('strictSel').value,
+    domain:           document.getElementById('domainSel').value,
+  };
+}
+
+function setMode(mode) {
+  document.getElementById('mode-text').style.display   = mode === 'text'   ? '' : 'none';
+  document.getElementById('mode-single').style.display = mode === 'single' ? '' : 'none';
+  document.getElementById('mode-excel').style.display  = mode === 'excel'  ? '' : 'none';
+  document.getElementById('tab-text').classList.toggle('active',   mode === 'text');
+  document.getElementById('tab-single').classList.toggle('active', mode === 'single');
+  document.getElementById('tab-excel').classList.toggle('active',  mode === 'excel');
+}
+
+function analyseAll() {
+  const settings = getSettings();
+  const activeTab = document.querySelector('.mode-tab.active');
+  const mode = activeTab ? activeTab.id.replace('tab-','') : 'text';
+
+  let reqs = [];
+  if (mode === 'text') {
+    const raw = document.getElementById('reqInput').value;
+    reqs = parseRequirements(raw);
+  } else if (mode === 'single') {
+    const id   = document.getElementById('singleId').value.trim() || 'REQ-001';
+    const body = document.getElementById('singleText').value.trim();
+    if (body) reqs = [{ id, body, raw: id + ': ' + body }];
+  } else if (mode === 'excel') {
+    // Excel mode: requirements already loaded into textarea
+    const raw = document.getElementById('reqInput').value;
+    if (!raw.trim()) { alert('Please load an Excel/CSV file first and click "Load →".'); document.getElementById('genBtn').disabled=false; return; }
+    reqs = parseRequirements(raw);
+  }
+
+  if (!reqs.length) {
+    alert('No requirements found. Please enter at least one requirement.');
+    return;
+  }
+
+  allResults = reqs.map(r => analyseRequirement(r.id, r.body, settings));
+  renderResults(allResults);
+}
+
+function renderResults(results) {
+  document.getElementById('emptyState').style.display  = 'none';
+  document.getElementById('resultsArea').style.display = '';
+  document.getElementById('exportBar').style.display   = '';
+  if (excelRows.length > 0) document.getElementById('btnExcelExport').style.display = '';
+
+  // Summary
+  const total  = results.length;
+  const pass   = results.filter(r => r.status === 'pass').length;
+  const warn   = results.filter(r => r.status === 'warn').length;
+  const fail   = results.filter(r => r.status === 'fail').length;
+  const issues = results.reduce((s, r) => s + r.issues.length, 0);
+
+  document.getElementById('sumTotal').textContent  = total;
+  document.getElementById('sumPass').textContent   = pass;
+  document.getElementById('sumWarn').textContent   = warn;
+  document.getElementById('sumFail').textContent   = fail;
+  document.getElementById('sumIssues').textContent = issues;
+
+  renderCards(results, currentFilter);
+}
+
+function renderCards(results, filter) {
+  const list = document.getElementById('reqList');
+  list.innerHTML = '';
+
+  const filtered = filter === 'all' ? results :
+                   results.filter(r => r.status === filter);
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div style="text-align:center;padding:32px;color:var(--txt3)">No requirements match this filter.</div>`;
+    return;
+  }
+
+  for (const r of filtered) {
+    list.appendChild(buildCard(r));
+  }
+}
+
+function buildCard(r) {
+  const card = document.createElement('div');
+  card.className = `req-card status-${r.status}`;
+  card.dataset.id = r.id;
+
+  const statusIcon = r.status === 'pass' ? '✅' : r.status === 'fail' ? '❌' : '⚠️';
+  const scoreColor = r.score >= 80 ? 'var(--grn)' : r.score >= 60 ? 'var(--ylw)' : 'var(--red)';
+  const grade      = r.score >= 90 ? 'A' : r.score >= 75 ? 'B' : r.score >= 55 ? 'C' : 'D';
+
+  // Highlight weak words in body
+  let highlightedBody = escapeHtml(r.body);
+  for (const w of WEAK_WORDS) {
+    const re = new RegExp('\\b(' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')\\b', 'gi');
+    highlightedBody = highlightedBody.replace(re, '<span class="highlighted">$1</span>');
+  }
+
+  // Issue count badge
+  const issueSummary = r.issues.length === 0
+    ? '<span style="color:var(--grn);font-size:11px;font-weight:600">✓ No issues</span>'
+    : `<span style="color:var(--red);font-size:11px;font-weight:600">${r.errors} error${r.errors!==1?'s':''}</span>`
+      + (r.warnings ? ` <span style="color:var(--ylw);font-size:11px">· ${r.warnings} warning${r.warnings!==1?'s':''}</span>` : '')
+      + (r.infos    ? ` <span style="color:var(--acc);font-size:11px">· ${r.infos} info</span>` : '');
+
+  card.innerHTML = `
+    <div class="req-card-header" onclick="toggleCard(this)">
+      <span class="req-id-badge">${escapeHtml(r.id)}</span>
+      <div style="flex:1;min-width:0">
+        <div class="req-text-preview">${highlightedBody}</div>
+        <div style="margin-top:5px;display:flex;gap:10px;align-items:center">
+          ${issueSummary}
+        </div>
+      </div>
+      <span class="req-status-icon">${statusIcon}</span>
+      <span class="req-expand-btn">▼</span>
+    </div>
+    <div class="req-card-body">
+      ${buildCardBody(r, scoreColor, grade)}
+    </div>`;
+
+  return card;
+}
+
+function buildCardBody(r, scoreColor, grade) {
+  // Score bar
+  const scoreBar = `
+    <div class="score-row">
+      <span style="font-size:11px;font-weight:700;color:var(--txt2);width:46px">Score</span>
+      <div class="score-bar-wrap">
+        <div class="score-bar" style="width:${r.score}%;background:${scoreColor}"></div>
+      </div>
+      <span class="score-txt" style="color:${scoreColor}">${r.score}%</span>
+      <span class="score-grade g-${grade}">${grade}</span>
+    </div>`;
+
+  // Original requirement
+  const origBox = `
+    <div class="orig-label">Original Requirement</div>
+    <div class="orig-box">${escapeHtml(r.id)}: ${escapeHtml(r.body)}</div>`;
+
+  // Criteria grid
+  const criteria  = getCriteriaStatus(r);
+  const cgCells   = criteria.map(c => `
+    <div class="criterion-pill cp-${c.status}" title="${c.name}">
+      <span class="cp-icon">${c.status==='pass'?'✓':c.status==='fail'?'✗':'!'}</span>
+      <span class="cp-name">${c.name}</span>
+    </div>`).join('');
+  const criteriaGrid = `<div class="criteria-grid">${cgCells}</div>`;
+
+  // Issues
+  let issuesHtml = '';
+  if (r.issues.length > 0) {
+    const items = r.issues.map(iss => `
+      <div class="issue-item sev-${iss.severity}">
+        <div class="issue-dot"></div>
+        <div class="issue-content">
+          <div class="issue-criterion">${iss.criterion}</div>
+          <div class="issue-msg">${escapeHtml(iss.msg)}</div>
+          <div class="issue-detail">${escapeHtml(iss.detail)}</div>
+        </div>
+      </div>`).join('');
+    issuesHtml = `
+      <div class="issues-section">
+        <div class="issues-title">⚠ Issues Found (${r.issues.length})</div>
+        ${items}
+      </div>`;
+  }
+
+  // Suggestion
+  const suggestion = generateSuggestion(r);
+  const suggestionHtml = r.issues.length > 0 ? `
+    <div class="suggestion-box">
+      <div class="suggestion-label">✨ Suggested Improvement</div>
+      <div class="suggested-text" id="sug-${escapeHtml(r.id)}">${escapeHtml(suggestion)}</div>
+      <div class="suggestion-actions">
+        <button class="copy-btn" onclick="copySuggestion('${escapeHtml(r.id)}', this)">📋 Copy</button>
+        <button class="copy-btn" style="background:var(--acc)" onclick="replaceInInput('${escapeHtml(r.id)}', '${escapeJs(suggestion)}')">↑ Use This</button>
+      </div>
+    </div>` : `
+    <div style="background:var(--grn-light);border:1px solid #A7F3D0;border-radius:var(--r);padding:12px 14px;color:var(--grn);font-size:13px;font-weight:500">
+      ✅ This requirement passes all checked INCOSE quality criteria.
+    </div>`;
+
+  return scoreBar + origBox + criteriaGrid + issuesHtml + suggestionHtml;
+}
+
+function toggleCard(header) {
+  const card = header.closest('.req-card');
+  card.classList.toggle('expanded');
+}
+
+function filterCards(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCards(allResults, f);
+}
+
+function copySuggestion(id, btn) {
+  const el = document.getElementById('sug-' + id);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function replaceInInput(id, suggestion) {
+  const ta = document.getElementById('reqInput');
+  const lines = ta.value.split('\n');
+  const newLines = lines.map(line => {
+    if (line.toUpperCase().startsWith(id.toUpperCase() + ':')) {
+      return id + ': ' + suggestion.replace(/\n.*/g, '');
+    }
+    return line;
+  });
+  ta.value = newLines.join('\n');
+  // Re-analyse
+  setTimeout(analyseAll, 100);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// UTILITY FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+function escapeJs(str) {
+  return String(str)
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n');
+}
+
+function toggleLegend() {
+  const c = document.getElementById('legendContent');
+  const t = document.getElementById('legendToggle');
+  if (c.style.display === 'none') { c.style.display = ''; t.textContent = '▼'; }
+  else { c.style.display = 'none'; t.textContent = '▶'; }
+}
+
+function clearAll() {
+  document.getElementById('reqInput').value = '';
+  document.getElementById('singleText').value = '';
+  document.getElementById('singleId').value = '';
+  document.getElementById('emptyState').style.display = '';
+  document.getElementById('resultsArea').style.display = 'none';
+  document.getElementById('exportBar').style.display = 'none';
+  allResults = [];
+}
+
+function loadSamples() {
+  const samples = `CS-SYS2-001: The system shall detect CAN bus communication errors within 10 ms of occurrence and set the corresponding DTC.
+CS-SYS2-002: The ECU should handle errors appropriately and ensure the system is safe.
+CS-SYS2-003: The system shall support fast response and also log all fault events to non-volatile memory.
+CS-SYS2-004: The software must process incoming CAN messages and manage the communication buffers efficiently.
+CS-SYS2-005: The inverter shall limit the output current to a maximum of 84 A (RMS) when the coolant temperature exceeds 70°C.
+CS-SYS2-006: The system shall be user friendly and provide adequate feedback to the operator.
+CS-SYS2-007: When the HVIL circuit opens, the system shall disable HV power output within 200 ms and set DTC 0x9A31.
+CS-SYS2-008: The ECU shall perform self-diagnostics and shall report status on CAN bus and shall log results to EEPROM.
+CS-SYS2-009: The software shall not be limited in its ability to handle future protocol versions.
+CS-SYS2-010: The system shall achieve a SPFM of at least 97% as required by ISO 26262 ASIL B for the speed control function.`;
+  document.getElementById('reqInput').value = samples;
+  setMode('text');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// EXPORT FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════
+
+function exportCSV() {
+  if (!allResults.length) return;
+  const headers = ['ID','Status','Score','Grade','Errors','Warnings','Info','Issues Summary','Original Requirement','Suggested Improvement'];
+  const rows = allResults.map(r => {
+    const grade = r.score >= 90 ? 'A' : r.score >= 75 ? 'B' : r.score >= 55 ? 'C' : 'D';
+    const issuesSummary = r.issues.map(i => `[${i.criterion}] ${i.msg}`).join(' | ');
+    const suggestion = generateSuggestion(r);
+    return [r.id, r.status.toUpperCase(), r.score, grade, r.errors, r.warnings, r.infos,
+            issuesSummary, r.body, suggestion].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+  });
+  const csv = [headers.join(','), ...rows].join('\n');
+  downloadFile('INCOSE_Requirements_Quality_Report.csv', csv, 'text/csv');
+}
+
+function exportHTML() {
+  if (!allResults.length) return;
+  const pass = allResults.filter(r => r.status === 'pass').length;
+  const fail = allResults.filter(r => r.status === 'fail').length;
+  const warn = allResults.filter(r => r.status === 'warn').length;
+  const avgScore = Math.round(allResults.reduce((s,r) => s + r.score, 0) / allResults.length);
+
+  const rows = allResults.map(r => {
+    const grade = r.score >= 90 ? 'A' : r.score >= 75 ? 'B' : r.score >= 55 ? 'C' : 'D';
+    const statusColor = r.status === 'pass' ? '#059669' : r.status === 'fail' ? '#DC2626' : '#D97706';
+    const issues = r.issues.map(i =>
+      `<li style="margin-bottom:4px"><strong style="color:${i.severity==='error'?'#DC2626':i.severity==='warning'?'#D97706':'#2563EB'}">[${i.criterion}]</strong> ${escapeHtml(i.msg)} — <em>${escapeHtml(i.detail)}</em></li>`
+    ).join('');
+    const suggestion = generateSuggestion(r);
+    return `<tr>
+      <td style="font-family:monospace;font-size:12px">${escapeHtml(r.id)}</td>
+      <td style="color:${statusColor};font-weight:700;text-transform:uppercase">${r.status}</td>
+      <td style="font-weight:700;color:${statusColor}">${r.score}% (${grade})</td>
+      <td style="font-size:12px">${escapeHtml(r.body)}</td>
+      <td><ul style="margin:0;padding-left:16px;font-size:12px">${issues || '<li style="color:#059669">No issues</li>'}</ul></td>
+      <td style="font-size:12px;font-family:monospace;color:#065F46">${escapeHtml(suggestion)}</td>
+    </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>INCOSE Requirements Quality Report</title>
+  <style>body{font-family:Arial,sans-serif;margin:32px;color:#1E293B}h1{color:#2563EB}
+  table{width:100%;border-collapse:collapse;margin-top:20px}
+  th{background:#1E293B;color:#fff;padding:10px 12px;text-align:left;font-size:12px}
+  td{padding:10px 12px;border-bottom:1px solid #E2E8F0;vertical-align:top;font-size:13px}
+  tr:nth-child(even)td{background:#F8FAFC}
+  .stat{display:inline-block;background:#F1F5F9;border:1px solid #E2E8F0;border-radius:8px;padding:12px 20px;margin:8px;text-align:center}
+  .snum{font-size:24px;font-weight:700}.slbl{font-size:11px;color:#64748B}</style></head>
+  <body>
+  <h1>📋 INCOSE Requirements Quality Report</h1>
+  <p style="color:#64748B">Generated: ${new Date().toLocaleString()} · Standard: INCOSE SEH / ISO 29148</p>
+  <div style="margin:20px 0">
+    <div class="stat"><div class="snum" style="color:#2563EB">${allResults.length}</div><div class="slbl">Total</div></div>
+    <div class="stat"><div class="snum" style="color:#059669">${pass}</div><div class="slbl">Pass</div></div>
+    <div class="stat"><div class="snum" style="color:#D97706">${warn}</div><div class="slbl">Warnings</div></div>
+    <div class="stat"><div class="snum" style="color:#DC2626">${fail}</div><div class="slbl">Fail</div></div>
+    <div class="stat"><div class="snum" style="color:#7C3AED">${avgScore}%</div><div class="slbl">Avg Score</div></div>
+  </div>
+  <table><thead><tr><th>ID</th><th>Status</th><th>Score</th><th>Requirement</th><th>Issues</th><th>Suggested Improvement</th></tr></thead>
+  <tbody>${rows}</tbody></table></body></html>`;
+
+  downloadFile('INCOSE_Requirements_Quality_Report.html', html, 'text/html');
+}
+
+function copyGoodReqs() {
+  if (!allResults.length) return;
+  const improved = allResults.map(r => {
+    const sug = generateSuggestion(r);
+    return `${r.id}: ${sug.replace(/\n.*/g,'')}`;
+  }).join('\n');
+  navigator.clipboard.writeText(improved).then(() => alert('✓ All improved requirements copied to clipboard!'));
+}
+
+function downloadFile(filename, content, type) {
+  const blob = new Blob([content], { type });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// EXCEL / CSV INPUT ENGINE
+// ══════════════════════════════════════════════════════════════════════════════
+
+let excelRows    = [];   // raw parsed rows [{col:val,...}, ...]
+let excelHeaders = [];   // column header names
+
+// ── Drag-and-drop handlers ────────────────────────────────────────────────────
+function excelDragOver(e)  { e.preventDefault(); document.getElementById('excelDropZone').classList.add('drag-over'); }
+function excelDragLeave(e) { document.getElementById('excelDropZone').classList.remove('drag-over'); }
+function excelDrop(e) {
+  e.preventDefault();
+  document.getElementById('excelDropZone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) readExcelFile(file);
+}
+function excelFileSelected(e) {
+  const file = e.target.files[0];
+  if (file) readExcelFile(file);
+}
+
+function readExcelFile(file) {
+  const name = file.name.toLowerCase();
+  const statusEl = document.getElementById('excelStatus');
+  statusEl.style.display = 'block';
+  statusEl.className = 'excel-status ok';
+  statusEl.textContent = '⏳ Reading file: ' + file.name + ' ...';
+
+  if (name.endsWith('.csv')) {
+    const reader = new FileReader();
+    reader.onload = e => parseCSV(e.target.result, file.name);
+    reader.readAsText(file);
+  } else if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+    const reader = new FileReader();
+    reader.onload = e => parseXLSX(e.target.result, file.name);
+    reader.readAsArrayBuffer(file);
+  } else {
+    statusEl.className = 'excel-status err';
+    statusEl.textContent = '✗ Unsupported file type. Use .xlsx, .xls, or .csv';
+  }
+}
+
+// ── CSV parser (RFC 4180) ─────────────────────────────────────────────────────
+function parseCSV(text, filename) {
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim());
+  if (lines.length < 2) { showExcelError('CSV has fewer than 2 rows.'); return; }
+
+  // Parse each line respecting quoted fields
+  function parseLine(line) {
+    const fields = [];
+    let cur = '', inQuote = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuote && line[i+1] === '"') { cur += '"'; i++; }
+        else inQuote = !inQuote;
+      } else if (ch === ',' && !inQuote) {
+        fields.push(cur.trim()); cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    fields.push(cur.trim());
+    return fields;
+  }
+
+  excelHeaders = parseLine(lines[0]);
+  excelRows = lines.slice(1).map(line => {
+    const vals = parseLine(line);
+    const obj = {};
+    excelHeaders.forEach((h, i) => obj[h] = vals[i] || '');
+    return obj;
+  }).filter(r => Object.values(r).some(v => v));
+
+  showExcelSuccess(filename);
+}
+
+// ── XLSX parser (pure JS — no library needed) ─────────────────────────────────
+function parseXLSX(buffer, filename) {
+  // Minimal XLSX reader: unzip and parse first sheet XML
+  try {
+    const bytes = new Uint8Array(buffer);
+    // Check ZIP magic bytes
+    if (bytes[0] !== 0x50 || bytes[1] !== 0x4B) {
+      showExcelError('File does not appear to be a valid .xlsx file (not a ZIP).'); return;
+    }
+    // Use built-in DecompressionStream if available (Chrome/Edge/Firefox 113+)
+    // Fallback: parse XLSX as ZIP manually using JSZip-compatible approach
+    readXLSXWithJSZip(buffer, filename);
+  } catch(e) {
+    showExcelError('Could not read XLSX: ' + e.message);
+  }
+}
+
+function readXLSXWithJSZip(buffer, filename) {
+  // We'll parse XLSX purely by reading its ZIP structure in JS
+  // XLSX is just a ZIP containing XML files
+  const bytes = new Uint8Array(buffer);
+
+  // Find all local file entries in the ZIP
+  function readUint16LE(arr, offset) { return arr[offset] | (arr[offset+1] << 8); }
+  function readUint32LE(arr, offset) { return arr[offset] | (arr[offset+1]<<8) | (arr[offset+2]<<16) | (arr[offset+3]<<24); }
+
+  const files = {};
+  let pos = 0;
+  while (pos < bytes.length - 4) {
+    if (bytes[pos]===0x50 && bytes[pos+1]===0x4B && bytes[pos+2]===0x03 && bytes[pos+3]===0x04) {
+      const compression = readUint16LE(bytes, pos+8);
+      const compSize    = readUint32LE(bytes, pos+18);
+      const uncompSize  = readUint32LE(bytes, pos+22);
+      const nameLen     = readUint16LE(bytes, pos+26);
+      const extraLen    = readUint16LE(bytes, pos+28);
+      const name        = new TextDecoder().decode(bytes.slice(pos+30, pos+30+nameLen));
+      const dataStart   = pos+30+nameLen+extraLen;
+      let data;
+      if (compression === 0) {
+        data = bytes.slice(dataStart, dataStart+uncompSize);
+      } else if (compression === 8) {
+        try {
+          data = pako_inflate(bytes.slice(dataStart, dataStart+compSize));
+        } catch(e) {
+          // Skip files we can't decompress
+          data = null;
+        }
+      }
+      if (data) files[name] = new TextDecoder('utf-8', {fatal:false}).decode(data);
+      pos = dataStart + compSize;
+    } else {
+      pos++;
+    }
+  }
+
+  // pako inflate polyfill using DecompressionStream
+  function pako_inflate(compressed) {
+    // Try native DecompressionStream (raw deflate)
+    // This is sync-impossible, so we do it differently:
+    throw new Error('need_fallback');
+  }
+
+  // If we can't decompress, use FileReader + DataURL approach via offscreen canvas trick
+  // Actually: use the simpler approach — read as text and try SharedArrayBuffer
+  // Best fallback for XLSX: parse the ZIP central directory and extract sheets using streams
+
+  // Check if we got the shared strings and sheet
+  const sharedStringsXML = files['xl/sharedStrings.xml'] || '';
+  const sheet1XML        = files['xl/worksheets/sheet1.xml'] || '';
+
+  if (!sheet1XML) {
+    // Try to get sheet name from workbook
+    const wbXML = files['xl/workbook.xml'] || '';
+    const sheetMatch = wbXML.match(/sheet[^>]+r:id="rId(\d+)"/i);
+    const sheetNum = sheetMatch ? sheetMatch[1] : '1';
+    const altSheet = files[`xl/worksheets/sheet${sheetNum}.xml`] || Object.keys(files).find(k => k.match(/worksheets\/sheet\d+\.xml/));
+    if (!altSheet) {
+      // Compression failed, fall back to CSV suggestion
+      showExcelError('Could not decompress XLSX in this browser. Please save as CSV and upload that instead, OR use the "Paste Text" tab after copying from Excel.');
+      return;
+    }
+  }
+
+  // Parse shared strings
+  const sharedStrings = [];
+  const siMatches = sharedStringsXML.matchAll(/<si>.*?<\/si>/gs);
+  for (const m of siMatches) {
+    const tMatches = [...m[0].matchAll(/<t[^>]*>([^<]*)<\/t>/g)];
+    sharedStrings.push(tMatches.map(t => t[1]).join(''));
+  }
+
+  // Decode XML entities
+  function decodeXML(s) {
+    return s.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&#(\d+);/g,(_,n)=>String.fromCharCode(n));
+  }
+
+  // Parse cells from sheet XML
+  function getCellValue(cellXML) {
+    const typeMatch = cellXML.match(/t="([^"]+)"/);
+    const valMatch  = cellXML.match(/<v>([^<]*)<\/v>/);
+    const inlineMatch = cellXML.match(/<is>.*?<t[^>]*>([^<]*)<\/t>.*?<\/is>/s);
+    if (!valMatch && !inlineMatch) return '';
+    const raw = inlineMatch ? inlineMatch[1] : valMatch[1];
+    const type = typeMatch ? typeMatch[1] : '';
+    if (type === 's') return decodeXML(sharedStrings[parseInt(raw)] || '');
+    if (type === 'inlineStr') return decodeXML(raw);
+    return decodeXML(raw);
+  }
+
+  // Get column letter from cell ref (A1 -> A, AA3 -> AA)
+  function colLetter(ref) { return ref.replace(/[0-9]/g,''); }
+  function colIndex(letters) {
+    let n = 0;
+    for (const ch of letters.toUpperCase()) n = n*26 + ch.charCodeAt(0)-64;
+    return n-1;
+  }
+
+  const sheet = sheet1XML || Object.values(files).find((v,_,a) => v.includes('<worksheet'));
+  if (!sheet) { showExcelError('Could not find worksheet data.'); return; }
+
+  // Parse rows
+  const rowMatches = [...sheet.matchAll(/<row[^>]*>(.*?)<\/row>/gs)];
+  const grid = [];
+  let maxCol = 0;
+
+  for (const rowM of rowMatches) {
+    const rowXML = rowM[1];
+    const cellMatches = [...rowXML.matchAll(/<c r="([^"]+)"([^>]*)>(.*?)<\/c>/gs)];
+    const rowData = {};
+    for (const cm of cellMatches) {
+      const ref  = cm[1];
+      const col  = colIndex(colLetter(ref));
+      const val  = getCellValue(cm[0]);
+      rowData[col] = val;
+      if (col > maxCol) maxCol = col;
+    }
+    grid.push(rowData);
+  }
+
+  if (grid.length < 2) { showExcelError('Sheet appears empty or has only one row.'); return; }
+
+  // Build headers from row 0
+  excelHeaders = [];
+  for (let c = 0; c <= maxCol; c++) {
+    excelHeaders.push(grid[0][c] || `Column ${c+1}`);
+  }
+
+  // Build rows from remaining rows
+  excelRows = grid.slice(1).map(row => {
+    const obj = {};
+    excelHeaders.forEach((h, i) => obj[h] = row[i] || '');
+    return obj;
+  }).filter(r => Object.values(r).some(v => v.trim()));
+
+  showExcelSuccess(filename);
+}
+
+function showExcelError(msg) {
+  const el = document.getElementById('excelStatus');
+  el.style.display = 'block';
+  el.className = 'excel-status err';
+  el.textContent = '✗ ' + msg;
+  document.getElementById('excelColMap').style.display = 'none';
+}
+
+function showExcelSuccess(filename) {
+  const el = document.getElementById('excelStatus');
+  el.style.display = 'block';
+  el.className = 'excel-status ok';
+  el.textContent = `✓ Loaded: ${filename}  —  ${excelRows.length} data rows, ${excelHeaders.length} columns`;
+
+  // Update drop zone
+  const dz = document.getElementById('excelDropZone');
+  dz.classList.add('loaded');
+  dz.querySelector('.excel-drop-title').textContent = '✓ ' + filename;
+  dz.querySelector('.excel-drop-sub').textContent   = `${excelRows.length} rows · ${excelHeaders.length} columns`;
+
+  // Populate column selectors
+  const colIdSel   = document.getElementById('colId');
+  const colTextSel = document.getElementById('colText');
+  colIdSel.innerHTML = colTextSel.innerHTML = '';
+
+  const noneOpt = '<option value="">— None / Auto-generate —</option>';
+  colIdSel.innerHTML = noneOpt;
+
+  excelHeaders.forEach((h, i) => {
+    const opt1 = document.createElement('option');
+    opt1.value = i; opt1.textContent = h;
+    // Auto-select ID column
+    if (/id|req.*id|number|no\.?$|identifier/i.test(h)) opt1.selected = true;
+    colIdSel.appendChild(opt1);
+
+    const opt2 = document.createElement('option');
+    opt2.value = i; opt2.textContent = h;
+    // Auto-select text column
+    if (/text|requirement|description|statement|req$/i.test(h)) opt2.selected = true;
+    colTextSel.appendChild(opt2);
+  });
+
+  // If no auto-selection for text col, pick largest-content column
+  if (!colTextSel.querySelector('option[selected]') && excelRows.length > 0) {
+    let maxLen = 0, maxIdx = 0;
+    excelHeaders.forEach((h, i) => {
+      const avg = excelRows.slice(0,5).reduce((s,r) => s + (r[h]||'').length, 0);
+      if (avg > maxLen) { maxLen = avg; maxIdx = i; }
+    });
+    colTextSel.options[maxIdx].selected = true;
+  }
+
+  // Show preview table
+  showExcelPreview();
+  document.getElementById('excelColMap').style.display = 'block';
+}
+
+function showExcelPreview() {
+  const preview = document.getElementById('excelPreview');
+  const rows = excelRows.slice(0, 3);
+  if (!rows.length) { preview.innerHTML = ''; return; }
+  const ths = excelHeaders.map(h => `<th>${escapeHtml(h)}</th>`).join('');
+  const trs = rows.map(r =>
+    `<tr>${excelHeaders.map(h => `<td title="${escapeHtml(r[h]||'')}">${escapeHtml((r[h]||'').substring(0,40))}</td>`).join('')}</tr>`
+  ).join('');
+  preview.innerHTML = `<div style="font-size:10px;color:var(--txt3);margin-bottom:4px;font-family:'JetBrains Mono',monospace">PREVIEW (first 3 rows):</div>
+    <div style="overflow-x:auto"><table class="excel-preview-table"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
+}
+
+function loadExcelIntoTextarea() {
+  const idColIdx   = document.getElementById('colId').value;
+  const textColIdx = parseInt(document.getElementById('colText').value);
+
+  if (isNaN(textColIdx)) { alert('Please select a Requirement Text column.'); return; }
+
+  const textColName = excelHeaders[textColIdx];
+  const idColName   = idColIdx !== '' ? excelHeaders[parseInt(idColIdx)] : null;
+
+  const lines = excelRows.map((row, i) => {
+    const body = (row[textColName] || '').trim();
+    if (!body) return null;
+    const id   = idColName ? (row[idColName] || '').trim() : '';
+    const finalId = id || `REQ-${String(i+1).padStart(3,'0')}`;
+    return `${finalId}: ${body}`;
+  }).filter(Boolean);
+
+  if (!lines.length) { alert('No requirement text found in the selected column.'); return; }
+
+  document.getElementById('reqInput').value = lines.join('\n');
+  setMode('text');
+
+  // Show success
+  const statusEl = document.getElementById('excelStatus');
+  statusEl.textContent = `✓ Loaded ${lines.length} requirements into text mode. Click "Analyse Requirements" to check quality.`;
+}
+
+// ── Export back to Excel with results ─────────────────────────────────────────
+function exportExcelWithResults() {
+  if (!allResults.length) return;
+  // Build CSV with all original columns + quality columns
+  const qualityCols = ['Quality_Status','Quality_Score','Quality_Grade',
+                       'Errors','Warnings','Infos','Issues_Summary','Suggested_Improvement'];
+  const allCols = [...(excelHeaders.length ? excelHeaders : ['Requirement_ID','Requirement_Text']), ...qualityCols];
+  const headerRow = allCols.map(h => `"${h}"`).join(',');
+
+  const dataRows = allResults.map((r, i) => {
+    const grade   = r.score>=90?'A':r.score>=75?'B':r.score>=55?'C':'D';
+    const issues  = r.issues.map(iss=>`[${iss.criterion}] ${iss.msg}`).join(' | ');
+    const suggestion = generateSuggestion(r).replace(/\n/g,' | ');
+    const origRow   = excelRows[i] || {};
+    const origCols  = excelHeaders.length
+      ? excelHeaders.map(h => `"${(origRow[h]||'').replace(/"/g,'""')}"`)
+      : [`"${r.id}"`, `"${r.body.replace(/"/g,'""')}"`];
+    const qualCols = [
+      r.status.toUpperCase(), r.score, grade,
+      r.errors, r.warnings, r.infos,
+      issues, suggestion
+    ].map(v => `"${String(v).replace(/"/g,'""')}"`);
+    return [...origCols, ...qualCols].join(',');
+  });
+
+  const csv = [headerRow, ...dataRows].join('\n');
+  downloadFile('Requirements_Quality_Report.csv', csv, 'text/csv');
+}
+
+</script>
+</body>
+</html>
